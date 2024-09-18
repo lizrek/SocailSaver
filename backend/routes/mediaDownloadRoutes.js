@@ -10,15 +10,56 @@ const sanitizeFilename = (name) => {
   return name.replace(/[^a-z0-9]/gi, "_").toLowerCase();
 };
 
+const acceptableCodecs = [
+  "mp4a.40.1",
+  "mp4a.40.2",
+  "mp4a.40.3",
+  "mp4a.40.4",
+  "mp4a.40.5",
+  "mp4a.40.17",
+  "mp4a.40.29",
+  "mp3",
+];
+
+const getBestAudioFormat = (audioQualities) => {
+  const bestAudio = audioQualities
+    .filter((quality) => acceptableCodecs.includes(quality.codec))
+    .map((quality) => ({
+      codec: quality.codec,
+      bitrate: Math.max(...quality.bitrates),
+    }))
+    .sort((a, b) => b.bitrate - a.bitrate)[0];
+
+  return bestAudio || null;
+};
+
+const getHighestBitrateFormat = (audioQualities) => {
+  return audioQualities
+    .map((quality) => ({
+      codec: quality.codec,
+      bitrate: Math.max(...quality.bitrates),
+    }))
+    .sort((a, b) => b.bitrate - a.bitrate)[0];
+};
+
+const getFormatString = (bestAudio, quality, fps) => {
+  if (bestAudio.codec === "mp3" || bestAudio.codec.startsWith("mp4a")) {
+    return `bestvideo[height<=${quality}][fps<=${fps}]+bestaudio[ext=${
+      bestAudio.codec === "mp3" ? "mp3" : "m4a"
+    }]`;
+  }
+  return `bestvideo[height<=${quality}][fps<=${fps}]+bestaudio`;
+};
+
 router.post("/download/init", async (req, res) => {
-  const { videoUrl, quality } = req.body;
+  const { videoUrl, quality, fps } = req.body;
 
   if (!videoUrl) {
     return res.status(400).json({ error: "You must provide a video URL" });
   }
 
-  if (!quality) {
-    return res.status(400).json({ error: "Invalid quality" });
+  if (!quality || !fps) {
+    return res.status(400).json({ error: "Invalid quality or fps" });
   }
 
   try {
@@ -29,11 +70,27 @@ router.post("/download/init", async (req, res) => {
     const downloadsDir = path.resolve(__dirname, "../downloads");
     await fs.ensureDir(downloadsDir);
 
+    let bestAudio = getBestAudioFormat(videoInfo.audioQualities);
+
+    if (!bestAudio) {
+      bestAudio = getHighestBitrateFormat(videoInfo.audioQualities);
+    }
+
+    if (!bestAudio) {
+      return res.status(400).json({ error: "No audio formats available." });
+    }
+
+    const format = getFormatString(bestAudio, quality, fps);
+
+    const postprocessorArgs = acceptableCodecs.includes(bestAudio.codec)
+      ? "-c:v copy -c:a copy"
+      : "-c:a aac -strict experimental";
+
     await youtubedl.exec(videoUrl, {
-      format: `bestvideo[height<=${quality}]+bestaudio/best`,
+      format: format,
       mergeOutputFormat: "mp4",
       output: filePath,
-      postprocessorArgs: ["-c:a aac -strict experimental"],
+      postprocessorArgs: postprocessorArgs,
     });
 
     res.status(200).json({ filename: `${videoTitle}.mp4` });

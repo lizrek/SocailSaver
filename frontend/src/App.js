@@ -1,4 +1,4 @@
-import "./App.css";
+import "./App.scss";
 import VideoDownloader from "./components/MediaDownloader";
 
 function App() {
@@ -7,9 +7,9 @@ function App() {
       <header className="App-header">
         <h1>Video Uploader</h1>
       </header>
-      <body>
+      <main>
         <VideoDownloader />
-      </body>
+      </main>
     </div>
   );
 }

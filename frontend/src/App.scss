@@ -1,10 +1,15 @@
+* {
+  border-color: green;
+}
+
 .App {
+  width: 100%;
   text-align: center;
 }
 
-.App-header{
+.App-header {
   background-color: #282c34;
-  min-height: 100vh;
+  min-height: 10vh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -13,14 +18,14 @@
   color: white;
 }
 
-input{
+input {
   padding: 10px;
   margin: 10px;
   width: 300px;
   font-size: 16px;
 }
 
-button{
+button {
   padding: 10px 20px;
   font-size: 16px;
   cursor: pointer;
