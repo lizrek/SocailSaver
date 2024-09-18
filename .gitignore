@@ -23,6 +23,8 @@ coverage
 
 # Dependency directories
 node_modules/
+/.pnp
+.pnp.js
 
 # Optional npm cache directory
 .npm
@@ -59,3 +61,9 @@ node_modules/
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# production build
+/build
+
+# misc
+.DS_Store
