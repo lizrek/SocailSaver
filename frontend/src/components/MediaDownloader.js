@@ -41,7 +41,11 @@ function VideoDownloader() {
 
   const handleDownload = async () => {
     try {
-      const initResponse = await videoApi.initDownload(videoUrl);
+      const numericQuality = selectedQuality.replace("p", "");
+      const initResponse = await videoApi.initDownload(
+        videoUrl,
+        numericQuality
+      );
 
       if (initResponse.data.filename) {
         const fileResponse = await videoApi.downloadFile(

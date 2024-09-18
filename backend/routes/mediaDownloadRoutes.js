@@ -11,10 +11,14 @@ const sanitizeFilename = (name) => {
 };
 
 router.post("/download/init", async (req, res) => {
-  const { videoUrl } = req.body;
+  const { videoUrl, quality } = req.body;
 
   if (!videoUrl) {
     return res.status(400).json({ error: "You must provide a video URL" });
+  }
+
+  if (!quality) {
+    return res.status(400).json({ error: "Invalid quality" });
   }
 
   try {
@@ -26,12 +30,10 @@ router.post("/download/init", async (req, res) => {
     await fs.ensureDir(downloadsDir);
 
     await youtubedl.exec(videoUrl, {
-      format: "bestvideo+bestaudio",
+      format: `bestvideo[height<=${quality}]+bestaudio/best`,
       mergeOutputFormat: "mp4",
       output: filePath,
-      postprocessorArgs: [
-        "-c:a aac -strict experimental",
-      ],
+      postprocessorArgs: ["-c:a aac -strict experimental"],
     });
 
     res.status(200).json({ filename: `${videoTitle}.mp4` });
