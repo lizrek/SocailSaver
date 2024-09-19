@@ -23,6 +23,7 @@ function VideoDownloader() {
   const [availableFpsOptions, setAvailableFpsOptions] = useState([]);
   const [selectedFps, setSelectedFps] = useState(30);
   const [isAudioOnly, setIsAudioOnly] = useState(false);
+  const [isVideoOnly, setIsVideoOnly] = useState(false);
   const [audioBitrates, setAudioBitrates] = useState([]);
   const [selectedBitrate, setSelectedBitrate] = useState("");
 
@@ -50,6 +51,7 @@ function VideoDownloader() {
     setVideoInfo(null);
     setSelectedFps(30);
     setIsAudioOnly(false);
+    setIsVideoOnly(false);
 
     if (!validateUrl(videoUrl)) {
       setError("Invalid YouTube URL.");
@@ -129,22 +131,43 @@ function VideoDownloader() {
     }
   };
 
+  const handleAudioOnlyChange = (e) => {
+    setIsAudioOnly(e.target.checked);
+    if (e.target.checked) {
+      setIsVideoOnly(false);
+    }
+  };
+
+  const handleVideoOnlyChange = (e) => {
+    setIsVideoOnly(e.target.checked);
+  };
+
   const handleDownload = async () => {
     try {
       let initResponse;
-      if (isAudioOnly) {
+      if (!isAudioOnly) {
+        const numericQuality = selectedQuality.replace("p", "");
+        if (isVideoOnly) {
+          initResponse = await videoApi.initDownload(
+            videoUrl,
+            numericQuality,
+            selectedFps,
+            null,
+            true
+          );
+        } else {
+          initResponse = await videoApi.initDownload(
+            videoUrl,
+            numericQuality,
+            selectedFps
+          );
+        }
+      } else {
         initResponse = await videoApi.initDownload(
           videoUrl,
           null,
           null,
           selectedBitrate
-        );
-      } else {
-        const numericQuality = selectedQuality.replace("p", "");
-        initResponse = await videoApi.initDownload(
-          videoUrl,
-          numericQuality,
-          selectedFps
         );
       }
 
@@ -155,7 +178,7 @@ function VideoDownloader() {
         const mimeType = isAudioOnly
           ? initResponse.data.filename.endsWith("mp3")
             ? "audio/mp3"
-            : "audio/mp4"
+            : "audio/m4a"
           : "video/mp4";
         const blob = new Blob([fileResponse.data], { type: mimeType });
         const link = document.createElement("a");
@@ -195,12 +218,22 @@ function VideoDownloader() {
               type="checkbox"
               id="audioOnlyCheckbox"
               checked={isAudioOnly}
-              onChange={(e) => {
-                setIsAudioOnly(e.target.checked);
-              }}
+              onChange={handleAudioOnlyChange}
             />
             <label htmlFor="audioOnlyCheckbox">Audio only</label>
           </div>
+
+          {!isAudioOnly && (
+            <div>
+              <input
+                type="checkbox"
+                id="videoOnlyCheckbox"
+                checked={isVideoOnly}
+                onChange={handleVideoOnlyChange}
+              />
+              <label htmlFor="videoOnlyCheckbox">Download without sound</label>
+            </div>
+          )}
 
           {isAudioOnly ? (
             <div>
@@ -240,7 +273,6 @@ function VideoDownloader() {
                   id="fpsSelect"
                   value={selectedFps}
                   onChange={(e) => setSelectedFps(parseInt(e.target.value))}
-                  disabled={isAudioOnly}
                 >
                   {availableFpsOptions.map((fps) => (
                     <option key={fps} value={fps}>
@@ -253,7 +285,12 @@ function VideoDownloader() {
           )}
 
           <button onClick={handleDownload}>
-            Download {isAudioOnly ? "audio" : "video"}
+            Download{" "}
+            {isAudioOnly
+              ? "audio"
+              : isVideoOnly
+              ? "video without sound"
+              : "video"}
           </button>
         </div>
       )}

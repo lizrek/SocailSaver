@@ -67,6 +67,7 @@ const getFormatString = (
   quality,
   fps,
   isAudioOnly,
+  isVideoOnly,
   targetBitrate
 ) => {
   if (isAudioOnly) {
@@ -75,20 +76,23 @@ const getFormatString = (
     }][abr<=${targetBitrate}]`;
   }
 
+  if (isVideoOnly) {
+    return `bestvideo[height<=${quality}][fps<=${fps}]`;
+  }
+
   const audioFormat =
     bestAudio.codec === "mp3"
       ? "mp3"
       : bestAudio.codec.startsWith("mp4a")
       ? "m4a"
       : "";
-
   return `bestvideo[height<=${quality}][fps<=${fps}]${
     audioFormat ? `+bestaudio[ext=${audioFormat}]` : "+bestaudio"
   }`;
 };
 
 router.post("/download/init", async (req, res) => {
-  const { videoUrl, quality, fps, bitrate } = req.body;
+  const { videoUrl, quality, fps, bitrate, isVideoOnly } = req.body;
   const isAudioOnly = !!bitrate;
 
   if (!videoUrl) {
@@ -103,15 +107,13 @@ router.post("/download/init", async (req, res) => {
     const videoInfo = await getVideoInfo(videoUrl);
     const videoTitle = sanitizeFilename(videoInfo.title);
 
-    let fileExtension;
-    if (isAudioOnly) {
-      const bestAudio = videoInfo.audioQualities.find((quality) =>
-        quality.bitrates.includes(parseFloat(bitrate))
-      );
-      fileExtension = bestAudio.codec === "mp3" ? "mp3" : "m4a";
-    } else {
-      fileExtension = "mp4";
-    }
+    let fileExtension = isAudioOnly
+      ? videoInfo.audioQualities.find((quality) =>
+          quality.bitrates.includes(parseFloat(bitrate))
+        ).codec === "mp3"
+        ? "mp3"
+        : "m4a"
+      : "mp4";
 
     const filePath = path.resolve(
       __dirname,
@@ -133,7 +135,7 @@ router.post("/download/init", async (req, res) => {
         getHighestBitrateFormat(videoInfo.audioQualities);
     }
 
-    if (!bestAudio) {
+    if (!bestAudio && !isVideoOnly) {
       return res.status(400).json({ error: "No audio formats available." });
     }
 
@@ -142,14 +144,21 @@ router.post("/download/init", async (req, res) => {
       quality,
       fps,
       isAudioOnly,
+      isVideoOnly,
       parseFloat(bitrate)
     );
 
-    const audioPostprocessorArgs = acceptableCodecs.includes(bestAudio.codec)
-      ? "-c:a copy"
-      : "-c:a aac -strict experimental";
-
-    const videoPostprocessorArgs = "-c:v copy";
+    let postprocessorArgs;
+    if (isAudioOnly) {
+      postprocessorArgs = "-c:a copy";
+    } else if (isVideoOnly) {
+      postprocessorArgs = "-c:v copy";
+    } else {
+      const audioPostprocessorArgs = acceptableCodecs.includes(bestAudio?.codec)
+        ? "-c:a copy"
+        : "-c:a aac -strict experimental";
+      postprocessorArgs = `-c:v copy ${audioPostprocessorArgs}`;
+    }
 
     const ytdlpOptions = {
       format: format,
@@ -159,7 +168,7 @@ router.post("/download/init", async (req, res) => {
         : `${videoPostprocessorArgs} ${audioPostprocessorArgs}`,
     };
 
-    if (!isAudioOnly) {
+    if (!isAudioOnly && !isVideoOnly) {
       ytdlpOptions.mergeOutputFormat = fileExtension;
     }
 

@@ -1,8 +1,8 @@
 import api from "./ApiClient";
 
 export const videoApi = {
-  initDownload: (videoUrl, quality, fps, bitrate) =>
-    api.post("/download/init", { videoUrl, quality, fps, bitrate }),
+  initDownload: (videoUrl, quality, fps, bitrate, isVideoOnly) =>
+    api.post("/download/init", { videoUrl, quality, fps, bitrate, isVideoOnly }),
 
   downloadFile: (filename) =>
     api.get(`/download/${filename}`, { responseType: "blob" }),
