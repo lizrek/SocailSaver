@@ -129,15 +129,6 @@ function VideoDownloader() {
     }
   };
 
-  const handleAudioOnlyChange = (e) => {
-    setIsAudioOnly(e.target.checked);
-    if (e.target.checked) {
-      setSelectedFps(null);
-    } else {
-      setSelectedBitrate(null);
-    }
-  };
-
   const handleDownload = async () => {
     try {
       let initResponse;
@@ -161,10 +152,12 @@ function VideoDownloader() {
         const fileResponse = await videoApi.downloadFile(
           initResponse.data.filename
         );
-        const blob = new Blob([fileResponse.data], {
-          type: isAudioOnly ? "audio/mp3" : "video/mp4",
-        });
-
+        const mimeType = isAudioOnly
+          ? initResponse.data.filename.endsWith("mp3")
+            ? "audio/mp3"
+            : "audio/mp4"
+          : "video/mp4";
+        const blob = new Blob([fileResponse.data], { type: mimeType });
         const link = document.createElement("a");
         link.href = window.URL.createObjectURL(blob);
         link.download = initResponse.data.filename;
@@ -202,7 +195,9 @@ function VideoDownloader() {
               type="checkbox"
               id="audioOnlyCheckbox"
               checked={isAudioOnly}
-              onChange={handleAudioOnlyChange}
+              onChange={(e) => {
+                setIsAudioOnly(e.target.checked);
+              }}
             />
             <label htmlFor="audioOnlyCheckbox">Audio only</label>
           </div>
