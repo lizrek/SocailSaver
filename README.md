@@ -22,7 +22,9 @@ npm start
 Backend runs on http://localhost:5000.
 
 Example .env for Backend:
+```bash
 PORT=5000
+```
 
 ### 3. Frontend Setup
 cd frontend
@@ -32,9 +34,11 @@ npm start
 Frontend runs on http://localhost:3000.
 
 Example .env for Frontend:
+```bash
 REACT_APP_API_URL=http://localhost:5000
+```
 
-### API Endpoints
+## API Endpoints
 
 - POST /download/init: Initialize a media download.
 - GET /download/:filename: Download the file.
