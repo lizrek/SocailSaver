@@ -1,7 +1,4 @@
 # SocailSaver
- 
-## Overview
-**SocialSaver** is a full-stack app that allows users to download media content (videos, audio) from social media platforms (currently only from YouTube). It features a **React** frontend and a **Node.js/Express** backend.
 
 ## Features
 - Download videos or audio by providing a media URL.
