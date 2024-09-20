@@ -7,11 +7,21 @@ const getDistinctQualities = (formats) => {
     if (format.height && format.vcodec !== "none") {
       const resolution = `${format.height}p`;
       const fps = format.fps || 30;
+      const ext = format.ext;
 
       if (!qualitiesMap[resolution]) {
-        qualitiesMap[resolution] = { resolution, fps: [fps] };
-      } else if (!qualitiesMap[resolution].fps.includes(fps)) {
-        qualitiesMap[resolution].fps.push(fps);
+        qualitiesMap[resolution] = {
+          resolution,
+          fps: [fps],
+          formats: [ext],
+        };
+      } else {
+        if (!qualitiesMap[resolution].fps.includes(fps)) {
+          qualitiesMap[resolution].fps.push(fps);
+        }
+        if (!qualitiesMap[resolution].formats.includes(ext)) {
+          qualitiesMap[resolution].formats.push(ext);
+        }
       }
     }
   });
