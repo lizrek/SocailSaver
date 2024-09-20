@@ -15,9 +15,15 @@
 
 ### 2.Backend Setup
 
+```bash
 cd backend
+```
+```bash
 npm install
+```
+```bash
 npm start
+```
 
 Backend runs on http://localhost:5000.
 
@@ -27,9 +33,15 @@ PORT=5000
 ```
 
 ### 3. Frontend Setup
+```bash
 cd frontend
+```
+```bash
 npm install
+```
+```bash
 npm start
+```
 
 Frontend runs on http://localhost:3000.
 
