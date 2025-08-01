@@ -47,7 +47,7 @@ Frontend runs on http://localhost:3000.
 
 Example .env for Frontend:
 ```bash
-REACT_APP_API_URL=http://localhost:5000
+REACT_APP_API_BASE_URL=http://localhost:5000/api
 ```
 
 ## API Endpoints
